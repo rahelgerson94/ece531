@@ -1,0 +1,39 @@
+% Setup Receiver
+rx = sdrrx('Pluto', 'GainSource','Manual', 'Gain', 20, 'CenterFrequency', 2.412e9);
+tx = sdrrx('Pluto');
+
+tx.BasebandSampleRate = 70e3;
+rx.BasebandSampleRate = 70e3;
+% view some spectrum
+rx.SamplesPerFrame = 2^15;
+sa = dsp.SpectrumAnalyzer;
+sa.SampleRate = rx.BasebandSampleRate;
+% while true
+%     sa(rx());
+% end 
+frameSize = 10; %each frame is frame 
+framesToCollect = 1000;
+%record the data for offline processing
+data = zeros(frameSize,framesToCollect);
+%collect all frames continuously
+for frames = 1:framesToCollect
+    [d, valid, of] = rx();
+    if ~valid
+        warning('data  invalid')
+    elseif of 
+        warning('overflow occured')
+    else
+        data(:,frame) = d;
+    end
+end
+
+%process new live data
+sa1 = dsp.SpectrumAnalyzer;
+for frame = 1:framesToCollect
+    sa1(data(:, frame));
+end
+
+% for k=1:1e3
+%     sa(rx());
+% end
+
